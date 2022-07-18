@@ -1,0 +1,76 @@
+version: '3'
+services:
+  os-node01:
+    image: opensearchproject/opensearch:2.1.0
+    container_name: os-node01
+    environment:
+      - node.name=os-node01       
+      - "DISABLE_INSTALL_DEMO_CONFIG: true"
+      - "JAVA_HOME: /usr/share/opensearch/jdk"
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      - "plugins.security.ssl.transport.pemkey_filepath=certs/os-node02/os-node02.key"      
+      - "plugins.security.ssl.transport.pemcert_filepath=certs/os-node02/os-node02.pem"
+      - "plugins.security.ssl.http.pemkey_filepath=certs/os-node02/os-node02.key"
+      - "plugins.security.ssl.http.pemcert_filepath=certs/os-node02/os-node02.pem"  
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536 # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
+        hard: 65536
+    volumes:
+      - os-data1:/usr/share/opensearch/data
+      - ./opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+      - ./certs:/usr/share/opensearch/config/certs:ro
+    ports:
+      - 9200:9200
+      - 9600:9600 # required for Performance Analyzer
+    networks:
+      - os-net
+  os-node02:
+    image: opensearchproject/opensearch:2.1.0
+    container_name: os-node02
+    environment:
+      - node.name=os-node02
+      - "DISABLE_INSTALL_DEMO_CONFIG: true"      
+      - "JAVA_HOME: /usr/share/opensearch/jdk"    
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "plugins.security.ssl.transport.pemkey_filepath=certs/os-node02/os-node02.key"       
+      - "plugins.security.ssl.transport.pemcert_filepath=certs/os-node02/os-node02.pem"     
+      - "plugins.security.ssl.http.pemkey_filepath=certs/os-node02/os-node02.key" # relative path
+      - "plugins.security.ssl.http.pemcert_filepath=certs/os-node02/os-node02.pem"      
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - os-data2:/usr/share/opensearch/data
+      - ./opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+      - ./certs:/usr/share/opensearch/config/certs:ro
+    networks:
+      - os-net
+  os-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.1.0
+    container_name: os-dashboards
+    ports:
+      - 5601:5601
+    expose:
+      - "5601"
+    volumes:
+      - ./certs:/usr/share/opensearch-dashboards/config/certs:ro
+      - ./opensearch-dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+    environment:
+      OPENSEARCH_HOSTS: '["https://os-node01:9200","https://os-node02:9200"]' # must be a string with no spaces when specified as an environment variable
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+    networks:
+      - os-net
+volumes:
+  os-data1:
+  os-data2:
+
+networks:
+  os-net:

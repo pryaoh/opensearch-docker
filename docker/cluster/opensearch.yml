@@ -1,0 +1,23 @@
+cluster.name: os-cluster
+discovery.seed_hosts: os-node01,os-node02
+cluster.initial_master_nodes: os-node01,os-node02     
+network.host: 0.0.0.0
+
+bootstrap.memory_lock: "true" # along with the memlock settings below, disables swapping
+
+cluster.routing.allocation.disk.threshold_enabled: true
+cluster.routing.allocation.disk.watermark.low: 93%
+cluster.routing.allocation.disk.watermark.high: 95%
+
+plugins.security.allow_unsafe_democertificates: true
+plugins.security.ssl.http.enabled: true
+plugins.security.ssl.http.pemtrustedcas_filepath: certs/ca/ca.pem
+plugins.security.ssl.transport.enabled: true
+plugins.security.ssl.transport.pemtrustedcas_filepath: certs/ca/ca.pem
+plugins.security.ssl.transport.enforce_hostname_verification: false
+
+plugins.security.authcz.admin_dn:
+  - 'CN=ADMIN,OU=UNIT,O=ORG,L=SEOUL,ST=JUNGU,C=KO'
+plugins.security.nodes_dn:
+  - 'CN=os-node01,OU=UNIT,O=ORG,L=SEOUL,ST=JUNGU,C=KO'
+  - 'CN=os-node02,OU=UNIT,O=ORG,L=SEOUL,ST=JUNGU,C=KO'
